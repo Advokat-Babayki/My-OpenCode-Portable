@@ -1,0 +1,33 @@
+name: Build portable release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve upstream version
+        id: ver
+        run: |
+          VER="$(curl -fsSL https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)"
+          echo "version=${VER#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build portable bundles
+        run: bash scripts/make-portable.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/opencode-portable-windows-x64.zip
+            release/opencode-portable-linux-x64.tar.gz
+          generate_release_notes: true

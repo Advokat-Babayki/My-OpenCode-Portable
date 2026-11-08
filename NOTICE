@@ -1,0 +1,9 @@
+My-OpenCode-Portable
+Copyright (C) 2026 Advokat-Babayki
+
+This project is licensed under the GNU General Public License v3.0;
+see LICENSE.
+
+The bundled OpenCode binaries are a separate work, licensed under the MIT
+License; see LICENSE-OpenCode. They are downloaded from
+https://github.com/anomalyco/opencode and are not modified by this project.

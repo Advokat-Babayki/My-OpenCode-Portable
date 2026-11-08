@@ -1,98 +1,71 @@
 ==================================================
-  My-OpenCode-Portable — портативный OpenCode V2
-  (Windows x64 + Linux x64)
+  My-OpenCode-Portable 1.0.0
+  OpenCode V2.2.6 — Windows x64 + Linux x64
 ==================================================
 
-ЧТО ЭТО
-  OpenCode V2 (CLI, Windows x64 и Linux x64). Всё
-  переносимо: конфиг, база сессий, кэш, состояние и
-  временные файлы лежат в этой папке. Ничего не
-  устанавливается в систему. Windows и Linux
-  пользуются одним конфигом и одной базой сессий.
-  Проверено на 2.2.6.
+ЭТО ГОТОВЫЙ АРХИВ
+  Всё уже внутри: бинарь, конфиг, лаунчеры.
+  Git и установка не нужны.
 
-УСТАНОВКА
-  Склонируй репозиторий на SSD, затем в терминале:
-     bash scripts/fetch-binary.sh
-  Скрипт скачает официальный бинарь V2 для текущей
-  системы. Если bin/ остался от старой версии —
-  запусти его же, он заменит бинарь.
-  Windows: можно взять готовый zip из релизов или
-  выполнить команду в Git Bash.
-
-WINDOWS — ЗАПУСК
-  1. Вставь SSD.
-  2. Открой Windows Terminal (или PowerShell).
-  3. Выполни:
-       Z:\My-OpenCode-Portable\launch.cmd
-     (буква диска Z может отличаться; лаунчер сам
-      определит свой путь при любой букве)
-  Все данные пишутся в data\, cache\, state\, tmp\
-  рядом с лаунчером.
-
-LINUX — ЗАПУСК
-  1. Вставь SSD.
-  2. cd /run/media/<пользователь>/<метка>/My-OpenCode-Portable
-  3. ./launch.sh
-     ./launch.sh --version
-     ./launch.sh run "вопрос"
-
-  Permission denied на exFAT: launch.sh сам попробует
-  динамический загрузчик; если не вышло:
-     sudo mount -o remount,exec /run/media/...
-
-ПРОВЕРКА
+ЗАПУСК
   Windows:
-     launch.cmd --version
-     launch.cmd debug paths
+     launch.cmd
   Linux:
-     ./launch.sh --version
-     ./launch.sh debug paths
-  Пути data/cache/state/tmp/db должны быть внутри
-  папки сборки. Не должно появиться:
-     C:\Users\<имя>\.config\opencode
-     C:\Users\<имя>\.local
-     C:\Users\<имя>\.cache
-     ~/.config/opencode
-     ~/.local/share/opencode
-     ~/.local/state/opencode
-     ~/.cache/opencode
+     bash launch.sh          (или ./launch.sh)
 
-МОДЕЛИ — OPENCODE GO
-  По умолчанию: opencode-go/deepseek-v4.1-flash.
-  Ключей в репозитории нет.
+  Если ./launch.sh пишет Permission denied — запусти через bash.
+
+ПЕРВЫЙ ВХОД
+  В TUI:
      /connect -> OpenCode Go -> вставить API key
      /models  -> выбрать модель
-  Ключ сохраняется в data\opencode\auth.json на SSD.
-  Без подписки: бесплатные модели opencode/...-free
-  через /models.
+  По умолчанию: opencode-go/deepseek-v4.1-flash.
+  Ключ хранится в data/opencode/auth.json на SSD.
+  Без подписки: бесплатные opencode/...-free.
 
-КОНФИГ
-  config/opencode.json — модель, отключены
-  автообновление и форматтеры, включён todo.
-  config/AGENTS.md — персональные инструкции агента.
-  config/cli.json — настройки TUI.
-  config/service.json — общий сервис отключён, чтобы
-  сборка не подключалась к системному сервису.
-  Береги SSD: если войдёшь в аккаунт, токен лежит
-  в data\opencode\auth.json.
+ГДЕ ДАННЫЕ
+  data/   — auth.json, БД сессий, логи
+  cache/  — кэш
+  state/  — состояние клиента
+  tmp/    — временные файлы
+  OpenCode пишет данные сюда; git/gh могут
+  использовать свои обычные настройки.
+
+ПРОВЕРКА
+  Windows: launch.cmd --version
+           launch.cmd debug paths
+  Linux:   bash launch.sh --version
+           bash launch.sh debug paths
+  Пути data/cache/state/tmp/db должны быть внутри этой папки.
 
 ОБНОВЛЕНИЕ
-  Автообновление выключено. Вручную:
-     bash scripts/fetch-binary.sh
-     bash scripts/fetch-binary.sh 2.2.7
-  Или замени bin\opencode.exe / bin/opencode из
-  https://github.com/anomalyco/opencode/releases
-  (теги v2.*, не v1.*).
+  bash scripts/fetch-binary.sh
+  bash scripts/fetch-binary.sh 2.2.7
+  Скрипт уже в архиве, проверяет SHA-256.
+  Автообновление отключено.
 
-ЕСЛИ TUI РИСУЕТСЯ КРИВО
-  Windows: Windows Terminal или
-     launch.cmd run "вопрос"
-  Linux:
-     ./launch.sh run "вопрос"
+  Проверка самого архива из релиза:
+     sha256sum -c SHA256SUMS
 
-ПРИМЕЧАНИЯ
-  * SmartScreen/антивирус на неподписанный exe —
-    «Всё равно выполнить».
-  * Git нужен только для работы с репозиториями.
-  * LSP в V2 не запускается; форматтеры отключены.
+ЕСЛИ НЕ ЗАПУСКАЕТСЯ
+  * Permission denied: bash launch.sh
+  * noexec: лаунчер покажет команду remount
+  * старый бинарь: запусти scripts/fetch-binary.sh
+
+КОНФИГ
+  config/opencode.json — модель и настройки
+  config/AGENTS.md     — инструкции агента
+  config/cli.json      — TUI
+  config/service.json  — приватный сервис, без общего демона
+
+ВЕРСИИ
+  Сборка: 1.0.0 (VERSION)
+  OpenCode: 2.2.6 (OPENCODE_VERSION)
+
+ЛИЦЕНЗИИ
+  Проект: GPL-3.0 (LICENSE, NOTICE)
+  OpenCode: MIT (LICENSE-OpenCode)
+
+БЕЗОПАСНОСТЬ
+  На SSD лежит исполняемый файл и токен доступа.
+  Не запускай с незнакомых машин и не передавай SSD посторонним.

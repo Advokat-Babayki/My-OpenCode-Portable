@@ -3,6 +3,7 @@
   "model": "opencode-go/deepseek-v4.1-flash",
   "update": "disable",
   "formatter": false,
+  "lsp": false,
   "experimental": {
     "todo": true
   },

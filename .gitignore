@@ -13,6 +13,12 @@ config/package-lock.json
 config/bun.lock
 config/.gitignore
 
+# secrets that must never be packed
+config/auth.json
+config/.env
+config/.env.*
+config/*.local.json
+
 # os noise
 .DS_Store
 Thumbs.db

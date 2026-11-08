@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-export OPENCODE_CONFIG="$ROOT/config/opencode.json"
 export OPENCODE_CONFIG_DIR="$ROOT/config"
 export XDG_DATA_HOME="$ROOT/data"
 export XDG_CACHE_HOME="$ROOT/cache"
+export XDG_STATE_HOME="$ROOT/state"
+export TMPDIR="$ROOT/tmp"
 export OPENCODE_DISABLE_AUTOUPDATE=true
-export OPENCODE_DISABLE_LSP_DOWNLOAD=true
+
+mkdir -p "$ROOT/data" "$ROOT/cache" "$ROOT/state" "$ROOT/tmp"
 
 BIN="$ROOT/bin/opencode"
+
+if [ ! -f "$BIN" ]; then
+  echo "opencode: bin/opencode не найден." >&2
+  echo "Скачай бинарь: bash scripts/fetch-binary.sh" >&2
+  exit 1
+fi
 
 if [ -x "$BIN" ]; then
   exec "$BIN" "$@"

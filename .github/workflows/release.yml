@@ -4,6 +4,10 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "OpenCode V2 tag (e.g. 2.2.6). Empty = latest V2"
+        required: false
 
 permissions:
   contents: write
@@ -18,7 +22,17 @@ jobs:
       - name: Resolve upstream version
         id: ver
         run: |
-          VER="$(curl -fsSL https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)"
+          VER="${{ inputs.version }}"
+          if [ -z "$VER" ] && [ "${{ github.ref_type }}" = "tag" ]; then
+            VER="${{ github.ref_name }}"
+          fi
+          if [ -z "$VER" ]; then
+            VER="$(curl -fsSL 'https://api.github.com/repos/anomalyco/opencode/releases?per_page=50' | jq -r '[.[] | select(.tag_name | startswith("v2."))][0].tag_name')"
+          fi
+          if [ -z "$VER" ] || [ "$VER" = "null" ]; then
+            echo "Could not resolve OpenCode V2 version" >&2
+            exit 1
+          fi
           echo "version=${VER#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build portable bundles
@@ -27,6 +41,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.ver.outputs.version) }}
           files: |
             release/opencode-portable-windows-x64.zip
             release/opencode-portable-linux-x64.tar.gz

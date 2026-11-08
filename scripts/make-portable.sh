@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Собирает переносимые бандлы opencode для Windows и Linux из официальных бинарей.
+# Собирает переносимые бандлы OpenCode V2 для Windows и Linux из официальных бинарей.
 #
 # Usage:
 #   bash scripts/make-portable.sh [VERSION]
 #
-# VERSION — тег upstream (например 1.18.16). Если не указан — берётся последний.
+# VERSION — тег upstream (например 2.2.6). Если не указан — берётся последний V2.
 # Результат: release/opencode-portable-windows-x64.zip, release/opencode-portable-linux-x64.tar.gz
 set -euo pipefail
 
@@ -13,9 +13,16 @@ UPSTREAM="anomalyco/opencode"
 
 VER="${1:-}"
 if [ -z "$VER" ]; then
-  VER="$(curl -fsSL "https://api.github.com/repos/$UPSTREAM/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p')"
+  VER="$(curl -fsSL "https://api.github.com/repos/$UPSTREAM/releases?per_page=50" \
+    | grep -o '"tag_name": *"v2\.[^"]*"' \
+    | head -n1 \
+    | sed -E 's/.*"(v2\.[^"]*)"/\1/' || true)"
 fi
 VER="${VER#v}"
+if [ -z "$VER" ]; then
+  echo "Не удалось определить версию OpenCode V2. Укажи её явно: bash scripts/make-portable.sh 2.2.6" >&2
+  exit 1
+fi
 
 BASE="https://github.com/$UPSTREAM/releases/download/v$VER"
 DL="$(mktemp -d)"
@@ -24,10 +31,10 @@ rm -rf "$OUT"
 mkdir -p "$OUT"
 trap 'rm -rf "$DL"' EXIT
 
-echo "== opencode-dev $VER =="
+echo "== opencode-portable $VER =="
 echo "== Downloading upstream binaries =="
-curl -fL -o "$DL/win.zip"   "$BASE/opencode-windows-x64.zip"
-curl -fL -o "$DL/linux.tgz" "$BASE/opencode-linux-x64.tar.gz"
+curl -fL --retry 3 -o "$DL/win.zip" "$BASE/opencode-windows-x64.zip"
+curl -fL --retry 3 -o "$DL/linux.tgz" "$BASE/opencode-linux-x64.tar.gz"
 
 mkdir -p "$DL/win/bin" "$DL/linux/bin"
 unzip -oq "$DL/win.zip" -d "$DL/win/bin"
@@ -35,14 +42,17 @@ tar -xzf "$DL/linux.tgz" -C "$DL/linux/bin"
 
 make_common() {
   local dir="$1" launcher="$2"
-  mkdir -p "$dir/config" "$dir/data" "$dir/cache"
-  for sub in agents commands modes plugins skills themes tools; do
+  mkdir -p "$dir/config" "$dir/data" "$dir/cache" "$dir/state" "$dir/tmp"
+  for sub in agents commands plugins skills; do
     mkdir -p "$dir/config/$sub"
   done
-  cp "$ROOT/config/opencode.json" "$dir/config/opencode.json"
+  for f in opencode.json AGENTS.md cli.json service.json; do
+    cp "$ROOT/config/$f" "$dir/config/$f"
+  done
   cp "$ROOT/launch.$launcher" "$dir/launch.$launcher"
   cp "$ROOT/LICENSE" "$dir/LICENSE"
   cp "$ROOT/README.md" "$dir/README.md"
+  cp "$ROOT/README.txt" "$dir/README.txt"
 }
 
 echo "== Assembling Windows bundle =="

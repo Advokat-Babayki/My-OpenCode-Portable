@@ -1,7 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "autoupdate": false,
-  "lsp": false,
+  "model": "opencode-go/deepseek-v4.1-flash",
+  "update": "disable",
   "formatter": false,
-  "model": "opencode/deepseek-v4-flash-free"
+  "experimental": {
+    "todo": true
+  },
+  "agents": {
+    "title": {
+      "model": "opencode/deepseek-v4.1-flash-free"
+    }
+  }
 }

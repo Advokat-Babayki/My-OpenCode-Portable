@@ -3,6 +3,8 @@
 *.bat   text eol=crlf
 *.sh    text eol=lf
 *.json  text eol=lf
+*.jsonc text eol=lf
+*.yml   text eol=lf
 *.md    text eol=lf
 *.txt   text eol=crlf
 LICENSE text eol=lf

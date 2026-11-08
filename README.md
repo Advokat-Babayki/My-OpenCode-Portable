@@ -1,121 +1,150 @@
-# opencode-dev — портативный OpenCode (Windows + Linux)
+# My-OpenCode-Portable — портативный OpenCode V2 (Windows + Linux)
 
-Переносимая сборка [OpenCode](https://github.com/anomalyco/opencode) v1.18.16
-(CLI, single-binary, Bun). Запускается прямо с флешки **без установки в систему**:
-конфиг, база сессий и кэш лежат рядом с бинарём. Ничего не пишется в
-`~/.config`, `~/.local/share`, `~/.cache` / `%USERPROFILE%`.
+Личная переносимая сборка [OpenCode](https://opencode.ai) V2: бинарь, конфиг, база
+сессий, кэш, состояние и временные файлы лежат рядом с лаунчером. Запускается с
+внешнего SSD/флешки без установки в систему. Ничего не пишется в `~/.config`,
+`~/.local/share`, `~/.local/state`, `~/.cache` / `%USERPROFILE%`.
 
-Windows и Linux пользуются **одним конфигом и одной базой сессий** — переключился
-на другую ОС, сессии на месте.
+Windows и Linux используют один конфиг и одну базу сессий.
 
-## Возможности
+## Что внутри
 
-- ⚡ **Без установки** — один бинарь, конфиг, база и кэш в одной папке
-- 🔑 **Без API-ключей** — встроенный провайдер OpenCode Zen с бесплатными моделями
-  (по умолчанию `opencode/deepseek-v4-flash-free`; список бесплатных — через `/models`)
-- 🚫 Автообновление, LSP-серверы и форматтеры отключены — ничего не качается на клиенте
-- 🧭 Работает при любом пути/букве диска — пути в лаунчерах строятся относительно себя
-- 🖥️ Windows (`launch.cmd`) и Linux (`launch.sh`, с fallback для exFAT)
+- **OpenCode V2** (CLI, single-binary, Bun). Проверено на `2.2.6`.
+- `config/opencode.json` — модель OpenCode Go, отключены автообновление и форматтеры,
+  включён todo-инструмент.
+- `config/AGENTS.md` — персональные инструкции агента.
+- `config/cli.json` — настройки TUI.
+- `config/service.json` — фоновый сервис OpenCode отключён, чтобы портативная копия
+  не подключалась к системному сервису и не писала в домашнюю папку.
+- `bin/` — бинарь OpenCode (в git не хранится).
+- `data/` — входы в провайдеры (`auth.json`), база сессий.
+- `cache/`, `state/`, `tmp/` — кэш, состояние клиента и временные файлы.
 
 ## Структура
 
 ```
-opencode-dev/
+My-OpenCode-Portable/
 ├── bin/
 │   ├── opencode.exe        # Windows x64
 │   └── opencode            # Linux x64
 ├── config/
 │   ├── opencode.json       # настройки и модель
-│   └── agents/ commands/ modes/ plugins/ skills/ themes/ tools/
-├── data/                   # XDG_DATA_HOME → auth.json, БД сессий
-├── cache/                  # XDG_CACHE_HOME
+│   ├── AGENTS.md           # инструкции агента
+│   ├── cli.json            # настройки TUI
+│   ├── service.json        # общий сервис отключён
+│   └── agents/ commands/ plugins/ skills/
+├── data/                   # auth.json, БД сессий
+├── cache/
+├── state/
+├── tmp/
 ├── launch.cmd              # Windows
 ├── launch.sh               # Linux
 └── README.md
 ```
+
+`bin/`, `data/`, `cache/`, `state/`, `tmp/` и `release/` в git не попадают.
+
+## Установка на SSD
+
+```bash
+git clone git@github.com:Advokat-Babayki/My-OpenCode-Portable.git
+cd My-OpenCode-Portable
+bash scripts/fetch-binary.sh
+./launch.sh
+```
+
+`fetch-binary.sh` скачивает официальный бинарь OpenCode V2 для текущей платформы
+(Linux/macOS/Windows через Git Bash). Можно указать версию явно:
+`bash scripts/fetch-binary.sh 2.2.6`.
+
+Если в `bin/` остался бинарь от старой сборки — замени его тем же скриптом.
+
+**Windows:** проще взять готовый архив `opencode-portable-windows-x64.zip` из
+[релизов](https://github.com/Advokat-Babayki/My-OpenCode-Portable/releases) или
+выполнить `bash scripts/fetch-binary.sh` в Git Bash.
 
 ## Запуск
 
 **Windows:**
 
 ```
-Z:\opencode-dev\launch.cmd
+Z:\My-OpenCode-Portable\launch.cmd
 ```
 
 **Linux:**
 
 ```bash
-cd /path/to/opencode-dev
 ./launch.sh               # TUI
-./launch.sh run "запрос"  # текстовый режим без TUI
+./launch.sh run "запрос"  # текстовый режим
 ```
 
-Запускайте из папки проекта — opencode подхватит контекст проекта.
+Запускайте из папки проекта — OpenCode подхватит контекст проекта.
 
-Если на Linux ошибка `Permission denied` (флешка exFAT, exec-бит не сохранился):
+Если на Linux ошибка `Permission denied` (exFAT, exec-бит не сохранился):
 `launch.sh` сам попробует запуститься через динамический загрузчик. Крайний случай:
 
 ```bash
 sudo mount -o remount,exec /path/to/mountpoint
 ```
 
+## Модели и OpenCode Go
+
+По умолчанию стоит `opencode-go/deepseek-v4.1-flash`. Ключей в репозитории нет.
+
+1. Запусти TUI.
+2. `/connect` → **OpenCode Go** → вставь свой API key.
+3. `/models` → выбери модель.
+
+Ключ сохранится в `data/opencode/auth.json` на флешке, не в git.
+
+Без подписки можно пользоваться бесплатными моделями OpenCode Zen:
+`/models` → `opencode/deepseek-v4.1-flash-free` и другие. Для генерации заголовков
+сессий в конфиге уже стоит бесплатная модель.
+
 ## Проверка, что система не засоряется
 
 ```bash
-./launch.sh db path      # → должно указать на data/opencode/ рядом с лаунчером
-./launch.sh --version    # → v1.18.16
+./launch.sh --version
+./launch.sh debug paths
 ```
 
-Убедитесь, что **не** появилось `~/.config/opencode`, `~/.local/share/opencode`,
-`~/.cache/opencode` (Windows: `C:\Users\<имя>\.config\opencode` и т.д.).
-Если появилось — редирект не сработал.
+Пути `data`, `cache`, `state`, `tmp`, `db` должны указывать внутрь папки сборки.
+Убедись, что **не** появилось `~/.config/opencode`, `~/.local/share/opencode`,
+`~/.local/state/opencode`, `~/.cache/opencode` (Windows: `C:\Users\<имя>\.config\opencode`
+и т.д.). Если появилось — редирект не сработал.
 
-## Бесплатные модели (без ключей)
+## Обновление OpenCode
 
-Встроенный провайдер **OpenCode Zen** (формат `opencode/<id>`):
+```bash
+bash scripts/fetch-binary.sh          # последний V2
+bash scripts/fetch-binary.sh 2.2.7    # конкретная версия
+```
 
-- `opencode/deepseek-v4-flash-free` — бесплатно (по умолчанию)
-- `opencode/big-pickle` — всегда бесплатно
-- `opencode/mimo-v2.5-free`, `opencode/nemotron-3-ultra-free`, и др. — ротируется
-
-Полный список — через `/models` в TUI. Если opencode попросит подключить
-провайдера: `/connect` → OpenCode Zen → вход через GitHub (бесплатно, без ключа).
-Токены сохраняются в `data/opencode/auth.json` (на флешке).
-
-Альтернативы без платного ключа: GitHub Copilot Free, Google Gemini Free, Groq Free.
-
-## Обновление
-
-Автообновление отключено. Обновить вручную — заменить бинарь из официального
-релиза [anomalyco/opencode](https://github.com/anomalyco/opencode/releases/latest):
-
-- Windows: `opencode-windows-x64.zip` → `bin/opencode.exe`
-- Linux: `opencode-linux-x64.tar.gz` → `bin/opencode`
+Автообновление отключено: бинарь меняется только вручную.
 
 ## Сборка релизных архивов
 
-Архивы собираются скриптом `scripts/make-portable.sh` — он скачивает официальные
-бинари с GitHub Releases указанной версии и собирает переносимые бандлы:
-
 ```bash
-bash scripts/make-portable.sh 1.18.16
+bash scripts/make-portable.sh 2.2.6
 ```
 
-Результат в `release/`:
-- `opencode-portable-windows-x64.zip`
-- `opencode-portable-linux-x64.tar.gz`
+Скрипт скачивает официальные бинари Windows x64 и Linux x64 и собирает:
 
-В CI (GitHub Actions) то же самое делает `.github/workflows/release.yml` — при
-пуше тега `v*` он собирает архивы и прикрепляет их к релизу автоматически.
+- `release/opencode-portable-windows-x64.zip`
+- `release/opencode-portable-linux-x64.tar.gz`
+
+В CI то же самое делает `.github/workflows/release.yml` при пуше тега `v*`.
+Версия V2 определяется автоматически (GitHub API отдаёт V1 как «latest», поэтому
+скрипты явно выбирают последний тег `v2.*`).
 
 ## Требования
 
-- **Windows**: 64-бит; git — только для работы с репозиториями; для TUI лучше
-  Windows Terminal (старый `cmd` рисует TUI криво — тогда используйте `run`)
+- **Windows**: 10/11 x64; для TUI лучше Windows Terminal; git — только для работы
+  с репозиториями.
 - **Linux**: bash, glibc ≥ 2.28 (для Alpine/не-glibc есть вариант `-musl`),
-  git — только для работы с репозиториями
+  git — только для работы с репозиториями.
 
 ## Лицензия
 
-GPL-3.0 — см. [LICENSE](LICENSE). OpenCode распространяется под собственной лицензией;
-бинарные файлы принадлежат их авторам.
+GPL-3.0 — см. [LICENSE](LICENSE). OpenCode распространяется под собственной
+лицензией; бинарные файлы принадлежат их авторам.
